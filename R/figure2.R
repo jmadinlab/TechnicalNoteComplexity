@@ -97,18 +97,6 @@ for (r in 1:length(Rs)) {
     
     f <- function(x, y) { z <- x * fin[1,1] + y * fin[2,1] + fin[3,1] }
     
-    error <- B - A %*% fin # orthogonal distances 
-    rss <- sum((error - mean(0))^2) # == SSE
-    ssr <- sum((error - 0)^2)
-    
-    rmse <- sqrt(mean(error^2))
-    
-    assign(paste0("RMSE_",Rs[[r]], "_", Ds[[d]]),
-           sqrt(sum(error^2) / length(error)))
-    
-    assign(paste0("R2_",Rs[[r]], "_", Ds[[d]]), 
-           1 - (ssr/(rss+ssr)))
-    
     # plane for plotting 
     assign(paste0("R.pred_", Rs[[r]]), seq(min(mdat$R), max(mdat$R), length=grid.lines))
     H.pred <- seq(min(mdat$H), max(mdat$H), length=grid.lines)
@@ -118,144 +106,22 @@ for (r in 1:length(Rs)) {
     assign(paste0("D.mat_", Rs[[r]], "_", Ds[[d]]), 
            matrix(f(mat$R, mat$H), nrow = grid.lines, ncol = grid.lines))
     
-    # d from plane vs data d 
-    # comp <- data.frame("TrueD" = tog[,Ds[d]],
-    #                    "PlaneD" = f(mdat$R, mdat$H))
-    # comp$R <- comp$TrueD - comp$PlaneD
-    # assign(paste0("R2_",Rs[[r]], "_", Ds[[d]]), 
-    #        round(1 - ( sum((comp$TrueD - comp$PlaneD)^2) / (sum((comp$TrueD - mean(comp$TrueD))^2))),4)) 
+    # d from plane vs data d
+    comp <- data.frame("TrueD" = tog[,Ds[d]],
+                       "PlaneD" = f(mdat$R, mdat$H))
+    comp$R <- comp$TrueD - comp$PlaneD
+    assign(paste0("R2_",Rs[[r]], "_", Ds[[d]]),
+           round(1 - ( sum((comp$TrueD - comp$PlaneD)^2) / (sum((comp$TrueD - mean(comp$TrueD))^2))),4))
     }
   }
 
-# Lizard island data 
-dta_rdh <- read.csv("data/megaplot.csv")
-head(dta_rdh)
-
-for (r in 1:length(Rs)) {
- # organize data
-  mdat <- dta_rdh[c(paste0(Rs[r]), "H")]
-  colnames(mdat) <- c("R","H")
-  mdat$R <- log10(mdat$R ^2 - 1)
-  mdat$H <- log10(mdat$H / (L0 * sqrt(2)))
-  mdat$m <- 1
-    
-  # best fit orthogonal plane 
-  A <- as.matrix(mdat)
-  B <- as.matrix(dta_rdh["D"])
-  fin <- inv(t(A)%*%A)%*%t(A)%*%B
-    
-  f <- function(x, y) { z <- x * fin[1,1] + y * fin[2,1] + fin[3,1] }
-  
-  error <- B - A %*% fin # orthogonal distances -- residuals 
-
-  rss <- sum((error - mean(0))^2) # == SSE
-  rse <- sqrt(rss/(length(error) - 2)) # residual standard error 
-  ssr <- sum((error - 0)^2)
-  
-  assign(paste0("R2_",Rs[[r]], "_lizard"), 
-         1 - (ssr/(rss+ssr)))
-  
-  assign(paste0("RMSE_",Rs[[r]], "_lizard"),
-         sqrt(sum(error^2) / length(error)))
-  
-  # mean(mdat$R) * fin[1,1] + mean(mdat$H) * fin[2,1] - mean(dta_rdh$D) #confirmation plane is going through centroid 
-  
-  # plane for plotting 
-  assign(paste0("R.pred_", Rs[[r]], "_lizard"), seq(min(mdat$R), max(mdat$R), length=grid.lines))
-  H.pred_lizard <- seq(min(mdat$H), max(mdat$H), length=grid.lines)
-  mat <- expand.grid(R=seq(min(mdat$R), max(mdat$R), length=grid.lines), 
-                     H=H.pred_lizard)
-    
-  assign(paste0("D.mat_", Rs[[r]], "_lizard"), 
-         matrix(f(mat$R, mat$H), nrow = grid.lines, ncol = grid.lines))
-    
-  # d from plane vs data d 
-  # comp <- data.frame("TrueD" = dta_rdh$D,
-  #                    "PlaneD" = f(mdat$R, mdat$H))
-  # comp$R <- comp$TrueD - comp$PlaneD
-  # assign(paste0("R2_",Rs[[r]], "_lizard"), 
-  #        round(1 - ( sum((comp$TrueD - comp$PlaneD)^2) / (sum((comp$TrueD - mean(comp$TrueD))^2))),4)) 
-  }
 
 # FIGURE 2
 pal <- fish(100, option = "Trimma_lantana")
 
-png("output/figure2.png", width = 4.5, height = 6.5, units = "in", res = 300)
+png("output/figure2.png", width = 4.5, height = 2, units = "in", res = 300)
 
-par(mar=c(.2, 3.5, .6, .4), mfrow = c(3,2), ps = 10)
-scatter3D(log10(dta_rdh$R ^2 - 1), log10(dta_rdh$H / (L0 * sqrt(2))), dta_rdh$D,
-          pch = 20, 
-          cex = .5,
-          col = pal,
-          xlab = "Rugosity",
-          ylab = "Height range",
-          zlab = "Fractal dimension",
-          surf = list(x = R.pred_R_lizard, y = H.pred_lizard, z = D.mat_R_lizard, facets = NA, 
-                      col = rgb(0,0,0,0.05), fitpoits = dta_rdh$D),
-          theta=215, 
-          phi=0,
-          colkey=FALSE)
-# print(R2_R_lizard)
-# text3D(-0.8, 0.8, 2.48, labels = expression(italic(r)^2 == 0.8714), surf = NULL, add = TRUE)
-print(RMSE_R_lizard)
-text3D(-0.8, 0.8, 2.48, labels = expression(italic(RMSE) == 0.049), surf = NULL, add = TRUE)
-mtext(expression(bold("DEM Rugosity")), side = 3, line = -1, cex = 1)
-mtext(expression(bold("Torres-Pulliza")), side = 2, line= 1.5, cex = 1)
-mtext("A", side = 3, at = -.5, line = -.5)
-
-for (i in length(error) ) {
-  if (error[i] > 0) {
-    dta_rdh$Dplot <- dta_rdh$D + error[i]
-  } else {
-    dta_rdh$Dplot <- dta_rdh$D - error[i]
-}} ### still cant see because they are so small 
-scatter3D(log10(dta_rdh$R_theory ^2 - 1), log10(dta_rdh$H / (L0 * sqrt(2))), dta_rdh$D,
-          pch = 20, 
-          cex = .5,
-          col = pal,
-          xlab = "Rugosity",
-          ylab = "Height range",
-          zlab = "Fractal dimension",
-          surf = list(x = R.pred_R_theory_lizard, y = H.pred_lizard, z = D.mat_R_theory_lizard, 
-                      facets = NA, col = rgb(0,0,0,0.05), fitpoits = dta_rdh$Dplot ),
-          theta=215, 
-          phi=0,
-          colkey=FALSE)
-print(R2_R_theory_lizard)
-text3D(-1, 0.45, 2.55, labels = expression(italic(r)^2 == 0.9860), surf = NULL, add = TRUE)
-mtext(expression(bold("Height Range Rugosity")), side = 3, line = -1, cex = 1)
-mtext("B", side = 3, at = -.5, line = -.5)
-
-scatter3D(log10(tog$R ^2 - 1), log10(tog$H / (L0 * sqrt(2))), tog$box_int,
-          pch = 20, 
-          cex = .5,
-          col = pal,
-          xlab = "Rugosity",
-          ylab = "Height range",
-          zlab = "Fractal dimension",
-          surf = list(x = R.pred_R, y = H.pred, z = D.mat_R_box_int, facets = NA, col = rgb(0,0,0,0.1), fitpoits = tog$box_int),
-          theta=215, 
-          phi=0,
-          colkey=FALSE)
-print(R2_R_box_int)
-text3D(-0.5, 2.3, 2.75, labels = expression(italic(r)^2 == 0.8958), surf = NULL, add = TRUE)
-mtext(expression(bold("Intermediate Box")), side = 2, line= 1.5, cex = 1)
-mtext("C", side = 3, at = -.5, line = -.5)
-
-scatter3D(log10(tog$R_theory ^2 - 1), log10(tog$H / (L0 * sqrt(2))), tog$box_int,
-          pch = 20, 
-          cex = .5,
-          col = pal,
-          xlab = "Rugosity",
-          ylab = "Height range",
-          zlab = "Fractal dimension",
-          surf = list(x = R.pred_R_theory, y = H.pred, z = D.mat_R_theory_box_int, facets = NA, col = rgb(0,0,0,0.1), fitpoits = tog$box_int),
-          theta=215, 
-          phi=0,
-          colkey=FALSE)
-print(R2_R_theory_box_int)
-text3D(-0.8, 2.3, 2.75, labels = expression(italic(r)^2 == 0.8956), surf = NULL, add = TRUE)
-mtext("D", side = 3, at = -.5, line = -.5)
+par(mar=c(.2, 3.5, .6, .4), mfrow = c(1,2), ps = 10)
 
 scatter3D(log10(tog$R ^2 - 1), log10(tog$H / (L0 * sqrt(2))), tog$true,
           pch = 20, 
@@ -271,7 +137,7 @@ scatter3D(log10(tog$R ^2 - 1), log10(tog$H / (L0 * sqrt(2))), tog$true,
 print(R2_R_true)
 text3D(-0.5, 2.3, 2.8, labels = expression(italic(r)^2 == 0.9958), surf = NULL, add = TRUE)
 mtext(expression(bold("Actual")), side = 2, line= 1.5, cex = 1)
-mtext("E", side = 3, at = -.5, line = -.5)
+mtext("A", side = 3, at = -.5, line = -.5)
 
 scatter3D(log10(tog$R_theory ^2 - 1), log10(tog$H / (L0 * sqrt(2))), tog$true,
           pch = 20, 
@@ -286,7 +152,7 @@ scatter3D(log10(tog$R_theory ^2 - 1), log10(tog$H / (L0 * sqrt(2))), tog$true,
           colkey=FALSE)
 print(R2_R_theory_true)
 text3D(-0.8, 2.3, 2.8, labels = expression(italic(r)^2 == 0.9959), surf = NULL, add = TRUE)
-mtext("F", side = 3, at = -.5, line = -.5)
+mtext("B", side = 3, at = -.5, line = -.5)
 
 dev.off()
 
