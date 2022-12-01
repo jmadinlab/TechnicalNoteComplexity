@@ -119,9 +119,9 @@ for (r in 1:length(Rs)) {
 # FIGURE 2
 pal <- fish(100, option = "Trimma_lantana")
 
-png("output/figure2.png", width = 4.5, height = 2, units = "in", res = 300)
+png("output/figure2.png", width = 4.5, height = 4, units = "in", res = 300)
 
-par(mar=c(.2, 3.5, .6, .4), mfrow = c(1,2), ps = 10)
+par(mar=c(.2, 3.5, .6, .6), mfrow = c(2,2), ps = 10)
 
 scatter3D(log10(tog$R ^2 - 1), log10(tog$H / (L0 * sqrt(2))), tog$true,
           pch = 20, 
@@ -135,7 +135,7 @@ scatter3D(log10(tog$R ^2 - 1), log10(tog$H / (L0 * sqrt(2))), tog$true,
           phi=0,
           colkey=FALSE)
 print(R2_R_true)
-text3D(-0.5, 2.3, 2.8, labels = expression(italic(r)^2 == 0.9958), surf = NULL, add = TRUE)
+text3D(-0.5, 2.3, 2.8, labels = expression(italic(r)^2 == 0.9958), surf = NULL, add = TRUE, cex = 1)
 mtext(expression(bold("Actual")), side = 2, line= 1.5, cex = 1)
 mtext("A", side = 3, at = -.5, line = -.5)
 
@@ -151,8 +151,39 @@ scatter3D(log10(tog$R_theory ^2 - 1), log10(tog$H / (L0 * sqrt(2))), tog$true,
           phi=0,
           colkey=FALSE)
 print(R2_R_theory_true)
-text3D(-0.8, 2.3, 2.8, labels = expression(italic(r)^2 == 0.9959), surf = NULL, add = TRUE)
+text3D(-0.8, 2.3, 2.8, labels = expression(italic(r)^2 == 0.9959), surf = NULL, add = TRUE, cex = 1)
 mtext("B", side = 3, at = -.5, line = -.5)
+
+scatter3D(log10(tog$R ^2 - 1), log10(tog$H / (L0 * sqrt(2))), tog$box_int,
+          pch = 20, 
+          cex = .5,
+          col = pal,
+          xlab = "Rugosity",
+          ylab = "Height range",
+          zlab = "Fractal dimension",
+          surf = list(x = R.pred_R, y = H.pred, z = D.mat_R_box_int, facets = NA, col = rgb(0,0,0,0.1), fitpoits = tog$true),
+          theta=215, 
+          phi=0,
+          colkey=FALSE)
+print(R2_R_box_int)
+text3D(-0.5, 2.3, 2.8, labels = expression(italic(r)^2 == 0.8958), surf = NULL, add = TRUE, cex = 1)
+mtext(expression(bold("Int. Box")), side = 2, line= 1.5, cex = 1)
+mtext("C", side = 3, at = -.5, line = -.5)
+
+scatter3D(log10(tog$R_theory ^2 - 1), log10(tog$H / (L0 * sqrt(2))), tog$box_int,
+          pch = 20, 
+          cex = .5,
+          col = pal,
+          xlab = "Rugosity",
+          ylab = "Height range",
+          zlab = "Fractal dimension",
+          surf = list(x = R.pred_R, y = H.pred, z = D.mat_R_theory_box_int, facets = NA, col = rgb(0,0,0,0.1), fitpoits = tog$true),
+          theta=215, 
+          phi=0,
+          colkey=FALSE)
+print(R2_R_theory_box_int)
+text3D(-0.5, 2.3, 2.8, labels = expression(italic(r)^2 == 0.8956), surf = NULL, add = TRUE, cex = 1)
+mtext("D", side = 3, at = -.5, line = -.5)
 
 dev.off()
 
