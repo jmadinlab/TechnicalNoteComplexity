@@ -110,6 +110,7 @@ mod <- lm(log(richness) ~ R + I(R^2) + log(sa) + D, data = coraldata)
 summary(mod)
 
 
+#### figure 
 nd <- expand.grid(R = seq(1, 2.5, 0.05), 
                   D = seq(2, 2.6, 0.01), 
                   sa = 4:100) %>%

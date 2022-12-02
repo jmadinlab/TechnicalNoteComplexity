@@ -1,4 +1,3 @@
-
 # SIMULATE SURFACES AND ESTIMATE FRACTAL DIMENSION USING DIFFERENT METHODS
 source('R/MidPointFM2D.R')
 source('R/est_D_methods.R')
@@ -52,7 +51,7 @@ for ( i in 1:length(all_Ds) ) {
   R_theory[i] <- R_func(Ds_est_Torres_Pulliza_method$mean_H_min, 1)
   
   R[i] <- surfaceArea(fM) / L^2 
-
+  
   Height[i] <- Ds_est_Torres_Pulliza_method$mean_H_max  }
 t1 = proc.time()
 print(t1-t0)
@@ -112,8 +111,8 @@ for (r in 1:length(Rs)) {
     comp$R <- comp$TrueD - comp$PlaneD
     assign(paste0("R2_",Rs[[r]], "_", Ds[[d]]),
            round(1 - ( sum((comp$TrueD - comp$PlaneD)^2) / (sum((comp$TrueD - mean(comp$TrueD))^2))),4))
-    }
   }
+}
 
 
 # FIGURE 2
@@ -186,4 +185,3 @@ text3D(-0.5, 2.3, 2.8, labels = expression(italic(r)^2 == 0.8956), surf = NULL, 
 mtext("D", side = 3, at = -.5, line = -.5)
 
 dev.off()
-

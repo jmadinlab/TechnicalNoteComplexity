@@ -8,7 +8,7 @@ In their recent synopsis, Loke and Chisholm (2022) present an overview of habita
 
 ### Figure 1
 
-![](output/Ra_species_fixedD.png)
+![](output/figure1_Ra_richness_fixedD.png)
 
 ### Figure 2
 
