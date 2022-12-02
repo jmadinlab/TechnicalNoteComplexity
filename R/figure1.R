@@ -113,7 +113,7 @@ summary(mod)
 #### figure 
 nd <- expand.grid(R = seq(1, 2.5, 0.05), 
                   D = seq(2, 2.6, 0.01), 
-                  sa = 4:100) %>%
+                  sa = 4:64) %>%
   as.data.frame() 
 
 pred <- nd %>%
