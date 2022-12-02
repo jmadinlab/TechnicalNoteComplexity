@@ -2,6 +2,7 @@ library(tidyverse)
 library(fishualize)
 library(patchwork)
 library(readr)
+library(brms)
 
 # load data
 dta_coral <- read_csv("data/coralspecies.csv")
@@ -102,22 +103,29 @@ comb8 <- lapply(1:nrow(box8), function(i) {
 dta_boxes <- bind_rows(comb2, comb4, comb6, comb8)
 
 coraldata <- dta_boxes %>%
-  mutate(sa = pa*R) # add surface area
+  mutate(sa = pa*R, R2 = R^2) # add surface area
 
 #### Analyze
-# linear regression model
-mod <- lm(log(richness) ~ R + I(R^2) + log(sa) + D, data = coraldata)
-summary(mod)
+# Bayesian linear regression model
 
+mod <- brm(log(richness) ~ R + R2 + log(sa) + D, 
+            data = coraldata,
+            backend = "cmdstanr", cores = 4)
+
+pp_check(mod)
+summary(mod)
+bayes_R2(mod)
+prior_summary(mod)
 
 #### figure 
-nd <- expand.grid(R = seq(1, 2.5, 0.05), 
+nd <- expand.grid(R = seq(1, 3, 0.05), 
                   D = seq(2, 2.6, 0.01), 
-                  sa = 4:64) %>%
-  as.data.frame() 
+                  sa = 4:100) %>%
+  as.data.frame() %>%
+  mutate(R2 = R^2)
 
 pred <- nd %>%
-  mutate(logS = predict(mod, newdata = nd)) %>%
+  mutate(logS = fitted(mod, newdata = nd)[,1]) %>%
   as.data.frame() 
 
 
@@ -146,7 +154,7 @@ b
 c <- ggplot(pred[pred$D == 2.5 & pred$R == 2.2,]) +
   geom_line(aes(x = (sa), y = exp(logS)), size = 1, linetype = 3) +
   scale_fill_fish(direction = 1, option = "Trimma_lantana") +
-  scale_y_continuous(limits = c(5,100)) +
+  scale_y_continuous(limits = c(5,105)) +
   theme_classic() +
   labs(fill = "S", x = "Surface area", y = "S", title = "R = 2.2") +
   theme(text = element_text(size = 16))
