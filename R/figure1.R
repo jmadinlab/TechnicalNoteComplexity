@@ -20,11 +20,12 @@ max_y <- max(dta_coral$mid_y) + 1
 ### 2x2m boxes 
 comb2 <- dta_coral %>%
   dplyr::group_by(rep, pa) %>%
-  dplyr::summarise(richness = n()) %>%
+  dplyr::summarise(richness = n(), abundance = sum(abu)) %>%
   dplyr::left_join(dta_rdh) %>%
   mutate(id = paste0("2_", rep)) %>%
   ungroup() %>%
-  dplyr::select(id, richness, D, R, pa)
+  mutate(Rsd = NA, Dsd = NA) %>%
+  dplyr::select(id, richness, abundance, Dm = D, Rm = R, Dsd, Rsd, pa) 
 
 ### 4x4m boxes
 L = 4
@@ -47,7 +48,10 @@ comb4 <- lapply(1:nrow(box4), function(i) {
 }) %>% bind_rows() %>%
   filter(check == T) %>%
   group_by(id) %>%
-  summarise(richness = length(unique(species)), D = mean(D), R = mean(R)) %>%
+  summarise(richness = length(unique(species)), 
+            abundance = sum(abu), 
+            Dm = mean(unique(D)), Rm = mean(unique(R)), 
+            Dsd = sd(unique(D)), Rsd = sd(unique(R))) %>%
   mutate(pa = 16)
 
 
@@ -72,7 +76,10 @@ comb6 <- lapply(1:nrow(box6), function(i) {
 }) %>% bind_rows() %>%
   filter(check == T) %>%
   group_by(id) %>%
-  summarise(richness = length(unique(species)), D = mean(D), R = mean(R)) %>%
+  summarise(richness = length(unique(species)), 
+            abundance = sum(abu), 
+            Dm = mean(unique(D)), Rm = mean(unique(R)), 
+            Dsd = sd(unique(D)), Rsd = sd(unique(R))) %>%
   mutate(pa = 36)
 
 ### 8x8m boxes
@@ -96,19 +103,22 @@ comb8 <- lapply(1:nrow(box8), function(i) {
 }) %>% bind_rows() %>%
   filter(check == T) %>%
   group_by(id) %>%
-  summarise(richness = length(unique(species)), D = mean(D), R = mean(R)) %>%
+  summarise(richness = length(unique(species)), 
+            abundance = sum(abu), 
+            Dm = mean(unique(D)), Rm = mean(unique(R)), 
+            Dsd = sd(unique(D)), Rsd = sd(unique(R))) %>%
   mutate(pa = 64)
 
 # combine data
 dta_boxes <- bind_rows(comb2, comb4, comb6, comb8)
 
 coraldata <- dta_boxes %>%
-  mutate(sa = pa*R, R2 = R^2) # add surface area
+  mutate(sa = pa*Rm, R2 = Rm^2) # add surface area
 
 #### Analyze
 # Bayesian linear regression model
 
-mod <- brm(log(richness) ~ R + R2 + log(sa) + D, 
+mod <- brm(log(richness) ~ Rm + R2 + log(sa) + Dm, 
             data = coraldata,
             backend = "cmdstanr", cores = 4)
 
@@ -118,19 +128,19 @@ bayes_R2(mod)
 prior_summary(mod)
 
 #### figure 
-nd <- expand.grid(R = seq(1, 3, 0.05), 
-                  D = seq(2, 2.6, 0.01), 
+nd <- expand.grid(Rm = seq(1, 3, 0.05), 
+                  Dm = 2.5, 
                   sa = 4:100) %>%
   as.data.frame() %>%
-  mutate(R2 = R^2)
+  mutate(R2 = Rm^2)
 
 pred <- nd %>%
   mutate(logS = fitted(mod, newdata = nd)[,1]) %>%
   as.data.frame() 
 
 
-a <- ggplot(pred[pred$D == 2.5,]) +
-  geom_raster(aes(x = (sa), y = R,  fill = exp(logS))) +
+a <- ggplot(pred) +
+  geom_raster(aes(x = (sa), y = Rm,  fill = exp(logS))) +
   scale_fill_fish(direction = 1, option = "Trimma_lantana") +
   geom_hline(yintercept = 1.1, linetype = 2, size = 1) +
   geom_hline(yintercept = 2.2, linetype = 3, size = 1) +
@@ -138,10 +148,10 @@ a <- ggplot(pred[pred$D == 2.5,]) +
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = 0,
                                barwidth = unit(1, 'lines'), 
                                barheight = unit(20, 'lines')))  +
-  labs(fill = "S", x = "Surface area") +
+  labs(fill = "S", x = "Surface area", y = "R") +
   theme(text = element_text(size = 16), legend.position = "right")
 a
-b <- ggplot(pred[pred$D == 2.5 & pred$R ==1.1,]) +
+b <- ggplot(pred[pred$Rm ==1.1,]) +
   geom_line(aes(x = (sa), y = exp(logS)), size = 1, linetype = 2) +
   scale_fill_fish(direction = 1, option = "Trimma_lantana") +
   scale_y_continuous(limits = c(5,100)) +
@@ -151,7 +161,7 @@ b <- ggplot(pred[pred$D == 2.5 & pred$R ==1.1,]) +
 
 b
 
-c <- ggplot(pred[pred$D == 2.5 & pred$R == 2.2,]) +
+c <- ggplot(pred[pred$Rm == 2.2,]) +
   geom_line(aes(x = (sa), y = exp(logS)), size = 1, linetype = 3) +
   scale_fill_fish(direction = 1, option = "Trimma_lantana") +
   scale_y_continuous(limits = c(5,105)) +
