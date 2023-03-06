@@ -4,6 +4,7 @@ source('R/est_D_methods.R')
 source('R/functions.R')
 library(fishualize)
 library(matlib)
+library(plot3D)
 
 # the scale of the map
 maxlevel = 8
@@ -118,7 +119,8 @@ for (r in 1:length(Rs)) {
 # FIGURE 2
 pal <- fish(100, option = "Trimma_lantana")
 
-png("output/figure2.png", width = 4.5, height = 4, units = "in", res = 300)
+#png("output/figure2.png", width = 4.5, height = 4, units = "in", res = 300)
+pdf("output/figure2.pdf", width = 4.5, height = 4)
 
 par(mar=c(.2, 3.5, .6, .6), mfrow = c(2,2), ps = 10)
 
