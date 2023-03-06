@@ -4,19 +4,23 @@ library(patchwork)
 library(readr)
 library(brms)
 
-# load data
+##### load data #####
+# data source: Torres-Pulliza et al. (2020)
+# coral species per 2x2m box
 dta_coral <- read_csv("data/coralspecies.csv")
+# Complexity measures per 2x2m box
 dta_rdh <- read_csv("data/megaplot.csv") %>%
   dplyr::select(rep, R, D)
-
+# Combine datasets
 dta <- left_join(dta_coral, dta_rdh)
 
+# bounding box of coral data
 min_x <- min(dta_coral$mid_x) - 1
 min_y <- min(dta_coral$mid_y) - 1
-
 max_x <- max(dta_coral$mid_x) + 1
 max_y <- max(dta_coral$mid_y) + 1
 
+##### Species diversity for boxes of varying sizes #####
 ### 2x2m boxes 
 comb2 <- dta_coral %>%
   dplyr::group_by(rep, pa) %>%
@@ -115,30 +119,37 @@ dta_boxes <- bind_rows(comb2, comb4, comb6, comb8)
 coraldata <- dta_boxes %>%
   mutate(sa = pa*Rm, R2 = Rm^2) # add surface area
 
-#### Analyze
-# Bayesian linear regression model
+##### Analyze #####
 
+# Bayesian linear regression model
 mod <- brm(log(richness) ~ Rm + R2 + log(sa) + Dm, 
             data = coraldata,
             backend = "cmdstanr", cores = 4)
 
+# posterior predictive check
 pp_check(mod)
+# model summary
 summary(mod)
+# bayesian R2
 bayes_R2(mod)
+# Extract priors
 prior_summary(mod)
 
-#### figure 
+##### figure #####
+
+# new data frame to predict to
 nd <- expand.grid(Rm = seq(1, 3, 0.05), 
                   Dm = 2.5, 
                   sa = 4:100) %>%
   as.data.frame() %>%
   mutate(R2 = Rm^2)
 
+# predict
 pred <- nd %>%
   mutate(logS = fitted(mod, newdata = nd)[,1]) %>%
   as.data.frame() 
 
-
+# plots
 a <- ggplot(pred) +
   geom_raster(aes(x = (sa), y = Rm,  fill = exp(logS))) +
   scale_fill_fish(direction = 1, option = "Trimma_lantana") +
@@ -170,7 +181,6 @@ c <- ggplot(pred[pred$Rm == 2.2,]) +
   theme(text = element_text(size = 16))
 
 c
-
 
 layout <- 
   "AAB
