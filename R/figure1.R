@@ -190,6 +190,7 @@ a + c + b + patchwork::plot_layout(design = layout) +
   plot_annotation(tag_levels = "A" ) & theme(text = element_text(size = 18))
 
 ggsave("output/figure1_Ra_richness_fixedD.png", width = 12, height = 8)
+ggsave("output/figure1_Ra_richness_fixedD.pdf", width = 12, height = 8)
 
 
 
