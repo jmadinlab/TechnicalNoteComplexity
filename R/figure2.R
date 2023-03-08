@@ -119,10 +119,10 @@ for (r in 1:length(Rs)) {
 # FIGURE 2
 pal <- fish(100, option = "Trimma_lantana")
 
-#png("output/figure2.png", width = 4.5, height = 4, units = "in", res = 300)
-pdf("output/figure2.pdf", width = 4.5, height = 4)
+png("output/figure2.png", width = 4.5, height = 4, units = "in", res = 500)
+#pdf("output/figure2.pdf", width = 4.5, height = 4)
 
-par(mar=c(.2, 3.5, .6, .6), mfrow = c(2,2), ps = 10)
+par(mar=c(.2, 3.5, 1.2, .6), mfrow = c(2,2), ps = 10)
 
 scatter3D(log10(tog$R ^2 - 1), log10(tog$H / (L0 * sqrt(2))), tog$true,
           pch = 20, 
@@ -134,7 +134,8 @@ scatter3D(log10(tog$R ^2 - 1), log10(tog$H / (L0 * sqrt(2))), tog$true,
           surf = list(x = R.pred_R, y = H.pred, z = D.mat_R_true, facets = NA, col = rgb(0,0,0,0.1), fitpoits = tog$true),
           theta=215, 
           phi=0,
-          colkey=FALSE)
+          colkey=FALSE, 
+          main = "Jenness (2004)")
 print(R2_R_true)
 text3D(-0.5, 2.3, 2.8, labels = expression(italic(r)^2 == 0.9958), surf = NULL, add = TRUE, cex = 1)
 mtext(expression(bold("Actual")), side = 2, line= 1.5, cex = 1)
@@ -150,7 +151,8 @@ scatter3D(log10(tog$R_theory ^2 - 1), log10(tog$H / (L0 * sqrt(2))), tog$true,
           surf = list(x = R.pred_R_theory, y = H.pred, z = D.mat_R_theory_true, facets = NA, col = rgb(0,0,0,0.1), fitpoits = tog$true),
           theta=215, 
           phi=0,
-          colkey=FALSE)
+          colkey=FALSE, 
+          main = "Torres-Pulliza et al. (2020)")
 print(R2_R_theory_true)
 text3D(-0.8, 2.3, 2.8, labels = expression(italic(r)^2 == 0.9959), surf = NULL, add = TRUE, cex = 1)
 mtext("B", side = 3, at = -.5, line = -.5)
